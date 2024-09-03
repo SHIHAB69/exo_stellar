@@ -13,20 +13,79 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
   TextEditingController _searchController = TextEditingController();
   List<Planet> _filteredPlanets = planets;
 
-  // This function filters the list of planets based on the user's search query.
+  // Favorites and user's named constellations
+  List<Planet> _favoritePlanets = []; // List to store favorite planets
+  List<String> _userConstellations = []; // List to store user's named constellations
+
+  // Function to filter the list of planets based on search query
   void _filterPlanets(String query) {
     setState(() {
       if (query.isEmpty) {
-        // If the search query is empty, show all planets.
         _filteredPlanets = planets;
       } else {
-        // Otherwise, filter the planets whose names contain the query string.
         _filteredPlanets = planets
             .where((planet) =>
             planet.name.toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
+  }
+
+  // Function to navigate to the favorites screen
+  void _showFavorites() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Favorite Planets'),
+        content: _favoritePlanets.isEmpty
+            ? Text('No favorite planets yet.')
+            : Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _favoritePlanets
+              .map((planet) => ListTile(
+            title: Text(planet.name),
+            leading: Image.asset(
+              planet.imagePath,
+              width: 40,
+              height: 40,
+            ),
+          ))
+              .toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Function to navigate to user's constellations screen
+  void _showConstellations() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('My Constellations'),
+        content: _userConstellations.isEmpty
+            ? Text('No constellations named yet.')
+            : Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _userConstellations
+              .map((constellation) => ListTile(
+            title: Text(constellation),
+          ))
+              .toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -55,6 +114,35 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
           ),
         ),
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'ExoStellar Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.favorite),
+              title: Text('Favorite Planets'),
+              onTap: _showFavorites,
+            ),
+            ListTile(
+              leading: Icon(Icons.star),
+              title: Text('My Constellations'),
+              onTap: _showConstellations,
+            ),
+          ],
+        ),
+      ),
       body: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -64,14 +152,20 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
         itemBuilder: (context, index) {
           final planet = _filteredPlanets[index];
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
               // Navigate to the SkySimulationScreen when a planet is tapped.
-              Navigator.push(
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => SkySimulationScreen(planet: planet),
                 ),
               );
+              // Check if the planet was added to favorites
+              if (result != null && result is Planet) {
+                setState(() {
+                  _favoritePlanets.add(result); // Add the returned planet to favorites
+                });
+              }
             },
             child: Card(
               child: Column(
