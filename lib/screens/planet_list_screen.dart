@@ -1,6 +1,7 @@
 // lib/screens/planet_list_screen.dart
 
 import 'package:flutter/material.dart';
+import '../models/constellation_service.dart';
 import '../models/planet.dart';
 import 'sky_simulation_screen.dart';
 
@@ -63,18 +64,23 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
   }
 
   // Function to navigate to user's constellations screen
+  // lib/screens/planet_list_screen.dart
+// Inside _PlanetListScreenState:
+
   void _showConstellations() {
+    final constellations = ConstellationService().constellations; // Fetch constellations
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('My Constellations'),
-        content: _userConstellations.isEmpty
+        content: constellations.isEmpty
             ? Text('No constellations named yet.')
             : Column(
           mainAxisSize: MainAxisSize.min,
-          children: _userConstellations
+          children: constellations
               .map((constellation) => ListTile(
-            title: Text(constellation),
+            title: Text(constellation.name),
+            subtitle: Text('Stars: ${constellation.stars.join(', ')}'),
           ))
               .toList(),
         ),
@@ -87,6 +93,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
